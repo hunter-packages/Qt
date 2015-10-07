@@ -267,7 +267,7 @@
               ['OS=="mac"', {
                 'link_settings': {
                   'libraries': [
-                    '$(SDKROOT)/usr/lib/libcups.dylib',
+                    '/usr/lib/libcups.dylib',
                   ]
                 },
               }, {

@@ -60,7 +60,7 @@
                 'conditions': [
                   [ 'skia_os == "mac" or skia_os == "ios"', {
                     'libraries': [
-                      '$(SDKROOT)/usr/lib/libz.dylib',
+                      '/usr/lib/libz.dylib',
                     ]
                   }, {  # skia_os != "mac" and skia_os != "ios"
                     'libraries': [
