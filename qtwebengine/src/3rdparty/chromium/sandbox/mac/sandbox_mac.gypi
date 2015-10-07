@@ -38,7 +38,7 @@
       ],
       'link_settings': {
         'libraries': [
-          '$(SDKROOT)/usr/lib/libbsm.dylib',
+          '/usr/lib/libbsm.dylib',
         ],
       },
       'conditions': [

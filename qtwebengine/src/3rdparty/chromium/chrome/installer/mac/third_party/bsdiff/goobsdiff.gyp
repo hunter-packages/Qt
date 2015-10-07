@@ -9,8 +9,8 @@
     ],
     'link_settings': {
       'libraries': [
-        '$(SDKROOT)/usr/lib/libbz2.dylib',
-        '$(SDKROOT)/usr/lib/libz.dylib',
+        '/usr/lib/libbz2.dylib',
+        '/usr/lib/libz.dylib',
       ],
     },
     'configurations': {

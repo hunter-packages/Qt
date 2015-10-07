@@ -88,7 +88,7 @@ generator_extra_sources_for_rules = [
 # Xcode's standard set of library directories, which don't need to be duplicated
 # in LIBRARY_SEARCH_PATHS. This list is not exhaustive, but that's okay.
 xcode_standard_library_dirs = frozenset([
-  '$(SDKROOT)/usr/lib',
+  '/usr/lib',
   '$(SDKROOT)/usr/local/lib',
 ])
 

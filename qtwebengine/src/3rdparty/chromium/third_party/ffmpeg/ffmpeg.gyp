@@ -370,7 +370,7 @@
               ],
               'link_settings': {
                 'libraries': [
-                  '$(SDKROOT)/usr/lib/libz.dylib',
+                  '/usr/lib/libz.dylib',
                 ],
               },
               'xcode_settings': {
