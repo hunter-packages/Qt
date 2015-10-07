@@ -69,7 +69,7 @@
               },
               'link_settings': {
                 'libraries': [
-                  '$(SDKROOT)/usr/lib/libxml2.dylib',
+                  '/usr/lib/libxml2.dylib',
                 ],
               },
             }],

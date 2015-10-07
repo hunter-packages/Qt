@@ -48,7 +48,7 @@
               ],
               'link_settings': {
                 'libraries': [
-                  '$(SDKROOT)/usr/lib/libsqlite3.dylib',
+                  '/usr/lib/libsqlite3.dylib',
                 ],
               },
             }],
