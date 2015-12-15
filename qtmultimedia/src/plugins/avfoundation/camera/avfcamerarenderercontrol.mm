@@ -50,7 +50,7 @@ class CVPixelBufferVideoBuffer : public QAbstractPlanarVideoBuffer
     friend class CVPixelBufferVideoBufferPrivate;
 public:
     CVPixelBufferVideoBuffer(CVPixelBufferRef buffer)
-        : QAbstractPlanarVideoBuffer(NoHandle)
+        : QAbstractPlanarVideoBuffer(CVPixelBufferHandle)
         , m_buffer(buffer)
         , m_mode(NotMapped)
     {
@@ -124,6 +124,11 @@ public:
             m_mode = NotMapped;
             CVPixelBufferUnlockBaseAddress(m_buffer, 0);
         }
+    }
+
+    QVariant handle() const
+    {
+        return qVariantFromValue((void*)m_buffer);
     }
 
 private:

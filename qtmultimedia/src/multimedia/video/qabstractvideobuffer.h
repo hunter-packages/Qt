@@ -58,6 +58,7 @@ public:
         CoreImageHandle,
         QPixmapHandle,
         EGLImageHandle,
+        CVPixelBufferHandle,
         UserHandle = 1000
     };
 
