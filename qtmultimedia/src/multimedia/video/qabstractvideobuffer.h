@@ -89,6 +89,10 @@ public:
 
     virtual QVariant handle() const;
 
+    virtual void* pixelBufferRef() {
+      return (void*)0;
+    }
+
 protected:
     QAbstractVideoBuffer(QAbstractVideoBufferPrivate &dd, HandleType type);
 

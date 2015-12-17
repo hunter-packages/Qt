@@ -200,6 +200,10 @@ public:
 #endif
     }
 
+    void* pixelBufferRef() {
+      return (void*)m_buffer;
+    }
+
 private:
 #ifdef Q_OS_IOS
     mutable CVOpenGLESTextureRef m_texture;
