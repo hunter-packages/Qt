@@ -126,6 +126,10 @@ public:
         }
     }
 
+    void* pixelBufferRef() {
+      return (void*)m_buffer;
+    }
+
 private:
     CVPixelBufferRef m_buffer;
     MapMode m_mode;

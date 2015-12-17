@@ -116,6 +116,8 @@ public:
 
     QAbstractVideoBuffer::HandleType handleType() const;
 
+    void* pixelBufferRef();
+
     QSize size() const;
     int width() const;
     int height() const;

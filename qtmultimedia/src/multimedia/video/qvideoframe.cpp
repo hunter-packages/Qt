@@ -421,6 +421,11 @@ QAbstractVideoBuffer::HandleType QVideoFrame::handleType() const
     return d->buffer ? d->buffer->handleType() : QAbstractVideoBuffer::NoHandle;
 }
 
+void* QVideoFrame::pixelBufferRef()
+{
+    return d->buffer ? d->buffer->pixelBufferRef() : 0;
+}
+
 /*!
     Returns the dimensions of a video frame.
 */
