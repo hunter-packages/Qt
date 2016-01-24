@@ -1,0 +1,82 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtwebengine-platform-notes.html
+    \title Qt WebEngine Platform Notes
+
+    \brief Contains information about issues that are specific to the Qt WebEngine module.
+
+    \section1 Building Qt WebEngine from Source
+
+    The requirements for building Qt 5 modules from source are listed separately for each supported
+    platform:
+
+    \list
+        \li \l{Qt for Windows - Requirements}
+        \li \l{Qt for X11 Requirements}
+        \li \l{Qt for OS X - Requirements}
+    \endlist
+
+    In addition, the following tools are required for building the \l {Qt WebEngine} module:
+
+    \list
+        \li Windows: Visual Studio 2013 or Visual Studio 2015
+        \li Linux: Clang or GCC version 4.7 or later
+        \li OS X: Xcode version 5.1 or later
+    \endlist
+
+    \section1 Adobe Flash Player Plugin Support
+
+    Qt WebEngine supports the Adobe Flash player plugin that is a Pepper Plugin API (PPAPI)
+    plugin. The plugin must be installed in one of the following locations, depending on the
+    platform:
+
+    \list
+        \li Windows
+            \code
+            C:\Windows\SysWOW64\Macromed\Flash\pepflashplayer*.dll
+            C:\Windows\System32\Macromed\Flash\pepflashplayer*.dll
+            \endcode
+        \li OS X
+            \code
+            /Library/Internet Plug-Ins/PepperFlashPlayer/PepperFlashPlayer.plugin
+            \endcode
+        \li Linux
+            \code
+            /usr/lib/pepperflashplugin-nonfree/libpepflashplayer.so
+            /usr/lib/PepperFlash/libpepflashplayer.so
+            /usr/lib64/chromium/PepperFlash/libpepflashplayer.so
+            \endcode
+    \endlist
+
+    You can also load the Flash player from a specific location by using command line arguments:
+
+    \code
+    --ppapi-flash-path=./libpepflashplayer.so
+    \endcode
+*/
