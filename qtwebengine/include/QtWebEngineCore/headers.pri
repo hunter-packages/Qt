@@ -1,0 +1,6 @@
+SYNCQT.HEADER_FILES = api/qtwebenginecoreglobal.h api/qwebenginecallback.h api/qwebenginecookiestoreclient.h api/qwebengineurlrequestinfo.h api/qwebengineurlrequestinterceptor.h api/qwebengineurlrequestjob.h api/qwebengineurlschemehandler.h ../../include/QtWebEngineCore/qtwebenginecoreversion.h ../../include/QtWebEngineCore/QtWebEngineCore 
+SYNCQT.HEADER_CLASSES = ../../include/QtWebEngineCore/QWebEngineCallback ../../include/QtWebEngineCore/QWebEngineCookieStoreClient ../../include/QtWebEngineCore/QWebEngineUrlRequestInfo ../../include/QtWebEngineCore/QWebEngineUrlRequestInterceptor ../../include/QtWebEngineCore/QWebEngineUrlRequestJob ../../include/QtWebEngineCore/QWebEngineUrlSchemeHandler ../../include/QtWebEngineCore/QtWebEngineCoreVersion 
+SYNCQT.PRIVATE_HEADER_FILES = api/qtwebenginecoreglobal_p.h api/qwebenginecallback_p.h api/qwebenginecookiestoreclient_p.h api/qwebengineurlrequestinfo_p.h api/qwebengineurlschemehandler_p.h 
+SYNCQT.QPA_HEADER_FILES = 
+SYNCQT.CLEAN_HEADER_FILES = api/qtwebenginecoreglobal.h api/qwebenginecallback.h api/qwebenginecookiestoreclient.h api/qwebengineurlrequestinfo.h api/qwebengineurlrequestinterceptor.h api/qwebengineurlrequestjob.h api/qwebengineurlschemehandler.h 
+SYNCQT.INJECTIONS = 

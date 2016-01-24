@@ -1,0 +1,5 @@
+#ifndef QT_QTQUICKCALENDAR_MODULE_H
+#define QT_QTQUICKCALENDAR_MODULE_H
+#include <QtQuickCalendar/QtQuickCalendarDepends>
+#include "qtquickcalendarversion.h"
+#endif

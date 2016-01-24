@@ -1,0 +1,5 @@
+#ifndef QT_QTQUICKCONTROLS_MODULE_H
+#define QT_QTQUICKCONTROLS_MODULE_H
+#include <QtQuickControls/QtQuickControlsDepends>
+#include "qtquickcontrolsversion.h"
+#endif

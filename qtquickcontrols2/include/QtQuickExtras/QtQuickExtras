@@ -1,0 +1,5 @@
+#ifndef QT_QTQUICKEXTRAS_MODULE_H
+#define QT_QTQUICKEXTRAS_MODULE_H
+#include <QtQuickExtras/QtQuickExtrasDepends>
+#include "qtquickextrasversion.h"
+#endif
