@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 Ruslan Baratov
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Toolkit.
@@ -316,6 +317,73 @@ void QAndroidCameraSession::adjustViewfinderSize(const QSize &captureSize, bool 
         if (m_previewStarted && restartPreview)
             m_camera->startPreview();
     }
+}
+
+QSize QAndroidCameraSession::viewfinderSize()
+{
+    return m_camera ? m_camera->previewSize() : QSize();
+}
+
+QVideoFrame::PixelFormat QAndroidCameraSession::previewFormat()
+{
+    if (!m_camera)
+        return QVideoFrame::Format_Invalid;
+
+    return QtPixelFormatFromAndroidImageFormat(m_camera->getPreviewFormat());
+}
+
+void QAndroidCameraSession::setPreviewFormat(QVideoFrame::PixelFormat format)
+{
+    if (!m_camera)
+        return;
+
+    AndroidCamera::ImageFormat androidFormat = AndroidImageFormatFromQtPixelFormat(format);
+    m_camera->setPreviewFormat(androidFormat);
+}
+
+qreal QAndroidCameraSession::minimumPreviewFrameRate()
+{
+    return m_camera ? m_camera->getPreviewFpsRange().getMinReal() : 0;
+}
+
+qreal QAndroidCameraSession::maximumPreviewFrameRate()
+{
+    return m_camera ? m_camera->getPreviewFpsRange().getMaxReal() : 0;
+}
+
+void QAndroidCameraSession::setPreviewFrameRate(qreal min, qreal max)
+{
+    if (!m_camera)
+        return;
+
+    AndroidCamera::FpsRange range = AndroidCamera::FpsRange::makeFromQReal(min, max);
+    m_camera->setPreviewFpsRange(range);
+}
+
+QList<QSize> QAndroidCameraSession::getSupportedPreviewSizes()
+{
+    return m_camera ? m_camera->getSupportedPreviewSizes() : QList<QSize>();
+}
+
+QList<QVideoFrame::PixelFormat> QAndroidCameraSession::getSupportedPixelFormats()
+{
+    QList<QVideoFrame::PixelFormat> formats;
+
+    if (!m_camera)
+        return formats;
+
+    QList<AndroidCamera::ImageFormat> nativeFormats = m_camera->getSupportedPreviewFormats();
+
+    for (int i = 0; i < nativeFormats.size(); ++i) {
+        formats << QtPixelFormatFromAndroidImageFormat(nativeFormats[i]);
+    }
+
+    return formats;
+}
+
+QList<AndroidCamera::FpsRange> QAndroidCameraSession::getSupportedPreviewFpsRange()
+{
+    return m_camera ? m_camera->getSupportedPreviewFpsRange() : QList<AndroidCamera::FpsRange>();
 }
 
 bool QAndroidCameraSession::startPreview()
@@ -693,6 +761,24 @@ void QAndroidCameraSession::processCapturedImage(int id,
     if (dest & QCameraImageCapture::CaptureToBuffer) {
         QVideoFrame frame(new DataVideoBuffer(data), resolution, QVideoFrame::Format_Jpeg);
         emit imageAvailable(id, frame);
+    }
+}
+
+QVideoFrame::PixelFormat QAndroidCameraSession::QtPixelFormatFromAndroidImageFormat(AndroidCamera::ImageFormat format)
+{
+    switch (format) {
+    case AndroidCamera::NV21: return QVideoFrame::Format_NV21;
+    case AndroidCamera::YV12: return QVideoFrame::Format_YV12;
+    default:                  return QVideoFrame::Format_Invalid;
+    }
+}
+
+AndroidCamera::ImageFormat QAndroidCameraSession::AndroidImageFormatFromQtPixelFormat(QVideoFrame::PixelFormat format)
+{
+    switch (format) {
+    case QVideoFrame::Format_NV21: return AndroidCamera::NV21;
+    case QVideoFrame::Format_YV12: return AndroidCamera::YV12;
+    default:                       return AndroidCamera::Unknown;
     }
 }
 

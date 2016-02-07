@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 Ruslan Baratov
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Toolkit.
@@ -70,6 +71,19 @@ public:
 
     void setVideoPreview(QObject *videoOutput);
     void adjustViewfinderSize(const QSize &captureSize, bool restartPreview = true);
+    QSize viewfinderSize();
+
+    QVideoFrame::PixelFormat previewFormat();
+    void setPreviewFormat(QVideoFrame::PixelFormat format);
+
+    qreal minimumPreviewFrameRate();
+    qreal maximumPreviewFrameRate();
+
+    void setPreviewFrameRate(qreal min, qreal max);
+
+    QList<QSize> getSupportedPreviewSizes();
+    QList<QVideoFrame::PixelFormat> getSupportedPixelFormats();
+    QList<AndroidCamera::FpsRange> getSupportedPreviewFpsRange();
 
     QImageEncoderSettings imageSettings() const { return m_imageSettings; }
     void setImageSettings(const QImageEncoderSettings &settings);
@@ -136,6 +150,9 @@ private:
                               const QSize &resolution,
                               QCameraImageCapture::CaptureDestinations dest,
                               const QString &fileName);
+
+    static QVideoFrame::PixelFormat QtPixelFormatFromAndroidImageFormat(AndroidCamera::ImageFormat);
+    static AndroidCamera::ImageFormat AndroidImageFormatFromQtPixelFormat(QVideoFrame::PixelFormat);
 
     int m_selectedCamera;
     AndroidCamera *m_camera;
