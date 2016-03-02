@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 Ruslan Baratov
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Toolkit.
@@ -95,6 +96,7 @@ QAndroidCameraSession::QAndroidCameraSession(QObject *parent)
     , m_savedState(-1)
     , m_status(QCamera::UnloadedStatus)
     , m_previewStarted(false)
+    , m_viewfinderSettingsDirty(true)
     , m_imageSettingsDirty(true)
     , m_captureDestination(QCameraImageCapture::CaptureToFile)
     , m_captureImageDriveMode(QCameraImageCapture::SingleImageCapture)
@@ -247,6 +249,7 @@ void QAndroidCameraSession::close()
     m_readyForCapture = false;
     m_currentImageCaptureId = -1;
     m_currentImageCaptureFileName.clear();
+    m_viewfinderSettingsDirty = true;
     m_imageSettingsDirty = true;
 
     m_camera->release();
@@ -272,6 +275,73 @@ void QAndroidCameraSession::setVideoPreview(QObject *videoOutput)
     }
 }
 
+QCameraViewfinderSettings QAndroidCameraSession::viewfinderSettings() const
+{
+    if (!m_camera)
+        return m_viewfinderSettings; // return the requested settings when the camera is not loaded
+
+    // Otherwise, return the actual settings
+    QCameraViewfinderSettings settings;
+    settings.setResolution(m_camera->actualPreviewSize());
+    settings.setPixelFormat(QtPixelFormatFromAndroidImageFormat(m_camera->getPreviewFormat()));
+    AndroidCamera::FpsRange fpsRange = m_camera->getPreviewFpsRange();
+    settings.setMinimumFrameRate(fpsRange.getMinReal());
+    settings.setMaximumFrameRate(fpsRange.getMaxReal());
+    settings.setPixelAspectRatio(1, 1);
+    return settings;
+}
+
+void QAndroidCameraSession::setViewfinderSettings(const QCameraViewfinderSettings &settings)
+{
+    if (m_viewfinderSettings == settings)
+        return;
+
+    m_viewfinderSettings = settings;
+    m_viewfinderSettingsDirty = true;
+
+    applyViewfinderSettings();
+
+    if (m_readyForCapture)
+        adjustViewfinderSize(m_imageSettings.resolution());
+}
+
+void QAndroidCameraSession::applyViewfinderSettings()
+{
+    if (!m_camera || !m_viewfinderSettingsDirty)
+        return;
+
+    if (m_viewfinderSettings.pixelFormat() != QVideoFrame::Format_Invalid) {
+        const AndroidCamera::ImageFormat previewFormat = AndroidImageFormatFromQtPixelFormat(m_viewfinderSettings.pixelFormat());
+        if (previewFormat == AndroidCamera::Unknown || !m_camera->getSupportedPreviewFormats().contains(previewFormat))
+            qWarning("Unsupported viewfinder pixel format");
+        else
+            m_camera->setPreviewFormat(previewFormat);
+    }
+
+    const AndroidCamera::FpsRange fpsRange = AndroidCamera::FpsRange::makeFromQReal(m_viewfinderSettings.minimumFrameRate(),
+                                                                                    m_viewfinderSettings.maximumFrameRate());
+    if (fpsRange.min > 0 || fpsRange.max > 0) {
+        // From the Android doc:
+        // "The list is sorted from small to large (first by maximum fps and then minimum fps)."
+        const QList<AndroidCamera::FpsRange> supportedFpsRanges = m_camera->getSupportedPreviewFpsRange();
+        bool found = false;
+        for (int i = supportedFpsRanges.size() - 1; i >= 0; --i) {
+            auto range = supportedFpsRanges[i];
+            if ((range.min == fpsRange.min && range.max == fpsRange.max)
+                    || (fpsRange.min <= 0 && fpsRange.max == range.max)
+                    || (fpsRange.max <= 0 && fpsRange.min == range.min)) {
+                m_camera->setPreviewFpsRange(range);
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            qWarning("Unsupported viewfinder frame rate");
+    }
+
+    m_viewfinderSettingsDirty = false;
+}
+
 void QAndroidCameraSession::adjustViewfinderSize(const QSize &captureSize, bool restartPreview)
 {
     if (!m_camera)
@@ -285,20 +355,33 @@ void QAndroidCameraSession::adjustViewfinderSize(const QSize &captureSize, bool 
         // the preview size cannot be different from the capture size
         adjustedViewfinderResolution = captureSize;
     } else {
-        // search for viewfinder resolution with the same aspect ratio
-        const qreal aspectRatio = qreal(captureSize.width()) / qreal(captureSize.height());
-        QList<QSize> previewSizes = m_camera->getSupportedPreviewSizes();
-        for (int i = previewSizes.count() - 1; i >= 0; --i) {
-            const QSize &size = previewSizes.at(i);
-            if (qAbs(aspectRatio - (qreal(size.width()) / size.height())) < 0.01) {
-                adjustedViewfinderResolution = size;
-                break;
-            }
-        }
+        const bool validCaptureSize = captureSize.width() > 0 && captureSize.height() > 0;
+        qreal captureAspectRatio = 0;
+        if (validCaptureSize)
+            captureAspectRatio = qreal(captureSize.width()) / qreal(captureSize.height());
 
-        if (!adjustedViewfinderResolution.isValid()) {
-            qWarning("Cannot find a viewfinder resolution matching the capture aspect ratio.");
-            return;
+        QList<QSize> previewSizes = m_camera->getSupportedPreviewSizes();
+
+        const QSize vfRes = m_viewfinderSettings.resolution();
+        if (vfRes.width() > 0 && vfRes.height() > 0
+                && previewSizes.contains(vfRes)
+                && (!validCaptureSize || qAbs(captureAspectRatio - (qreal(vfRes.width()) / vfRes.height())) < 0.01)) {
+            adjustedViewfinderResolution = vfRes;
+        } else if (validCaptureSize) {
+            // search for viewfinder resolution with the same aspect ratio
+            for (int i = previewSizes.count() - 1; i >= 0; --i) {
+                const QSize &size = previewSizes.at(i);
+                if (qAbs(captureAspectRatio - (qreal(size.width()) / size.height())) < 0.01) {
+                    adjustedViewfinderResolution = size;
+                    break;
+                }
+            }
+            if (!adjustedViewfinderResolution.isValid()) {
+                qWarning("Cannot find a viewfinder resolution matching the capture aspect ratio.");
+                return;
+            }
+        } else {
+            adjustedViewfinderResolution = previewSizes.last();
         }
     }
 
@@ -316,6 +399,36 @@ void QAndroidCameraSession::adjustViewfinderSize(const QSize &captureSize, bool 
         if (m_previewStarted && restartPreview)
             m_camera->startPreview();
     }
+}
+
+QList<QSize> QAndroidCameraSession::getSupportedPreviewSizes() const
+{
+    return m_camera ? m_camera->getSupportedPreviewSizes() : QList<QSize>();
+}
+
+QList<QVideoFrame::PixelFormat> QAndroidCameraSession::getSupportedPixelFormats() const
+{
+    QList<QVideoFrame::PixelFormat> formats;
+
+    if (!m_camera)
+        return formats;
+
+    const QList<AndroidCamera::ImageFormat> nativeFormats = m_camera->getSupportedPreviewFormats();
+
+    formats.reserve(nativeFormats.size());
+
+    for (AndroidCamera::ImageFormat nativeFormat : nativeFormats) {
+        QVideoFrame::PixelFormat format = QtPixelFormatFromAndroidImageFormat(nativeFormat);
+        if (format != QVideoFrame::Format_Invalid)
+            formats.append(format);
+    }
+
+    return formats;
+}
+
+QList<AndroidCamera::FpsRange> QAndroidCameraSession::getSupportedPreviewFpsRange() const
+{
+    return m_camera ? m_camera->getSupportedPreviewFpsRange() : QList<AndroidCamera::FpsRange>();
 }
 
 bool QAndroidCameraSession::startPreview()
@@ -341,6 +454,7 @@ bool QAndroidCameraSession::startPreview()
     emit statusChanged(m_status);
 
     applyImageSettings();
+    applyViewfinderSettings();
     adjustViewfinderSize(m_imageSettings.resolution());
 
     AndroidMultimediaUtils::enableOrientationListener(true);
@@ -693,6 +807,42 @@ void QAndroidCameraSession::processCapturedImage(int id,
     if (dest & QCameraImageCapture::CaptureToBuffer) {
         QVideoFrame frame(new DataVideoBuffer(data), resolution, QVideoFrame::Format_Jpeg);
         emit imageAvailable(id, frame);
+    }
+}
+
+QVideoFrame::PixelFormat QAndroidCameraSession::QtPixelFormatFromAndroidImageFormat(AndroidCamera::ImageFormat format)
+{
+    switch (format) {
+    case AndroidCamera::RGB565:
+        return QVideoFrame::Format_RGB565;
+    case AndroidCamera::NV21:
+        return QVideoFrame::Format_NV21;
+    case AndroidCamera::YUY2:
+        return QVideoFrame::Format_YUYV;
+    case AndroidCamera::JPEG:
+        return QVideoFrame::Format_Jpeg;
+    case AndroidCamera::YV12:
+        return QVideoFrame::Format_YV12;
+    default:
+        return QVideoFrame::Format_Invalid;
+    }
+}
+
+AndroidCamera::ImageFormat QAndroidCameraSession::AndroidImageFormatFromQtPixelFormat(QVideoFrame::PixelFormat format)
+{
+    switch (format) {
+    case QVideoFrame::Format_RGB565:
+        return AndroidCamera::RGB565;
+    case QVideoFrame::Format_NV21:
+        return AndroidCamera::NV21;
+    case QVideoFrame::Format_YUYV:
+        return AndroidCamera::YUY2;
+    case QVideoFrame::Format_Jpeg:
+        return AndroidCamera::JPEG;
+    case QVideoFrame::Format_YV12:
+        return AndroidCamera::YV12;
+    default:
+        return AndroidCamera::Unknown;
     }
 }
 

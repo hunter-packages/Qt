@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 Ruslan Baratov
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Toolkit.
@@ -68,8 +69,15 @@ public:
     void setCaptureMode(QCamera::CaptureModes mode);
     bool isCaptureModeSupported(QCamera::CaptureModes mode) const;
 
+    QCameraViewfinderSettings viewfinderSettings() const;
+    void setViewfinderSettings(const QCameraViewfinderSettings &settings);
+
     void setVideoPreview(QObject *videoOutput);
     void adjustViewfinderSize(const QSize &captureSize, bool restartPreview = true);
+
+    QList<QSize> getSupportedPreviewSizes() const;
+    QList<QVideoFrame::PixelFormat> getSupportedPixelFormats() const;
+    QList<AndroidCamera::FpsRange> getSupportedPreviewFpsRange() const;
 
     QImageEncoderSettings imageSettings() const { return m_imageSettings; }
     void setImageSettings(const QImageEncoderSettings &settings);
@@ -128,6 +136,7 @@ private:
     bool startPreview();
     void stopPreview();
 
+    void applyViewfinderSettings();
     void applyImageSettings();
     void processPreviewImage(int id, const QByteArray &data, int width, int height, int rotation);
     QImage prepareImageFromPreviewData(const QByteArray &data, int width, int height, int rotation);
@@ -136,6 +145,9 @@ private:
                               const QSize &resolution,
                               QCameraImageCapture::CaptureDestinations dest,
                               const QString &fileName);
+
+    static QVideoFrame::PixelFormat QtPixelFormatFromAndroidImageFormat(AndroidCamera::ImageFormat);
+    static AndroidCamera::ImageFormat AndroidImageFormatFromQtPixelFormat(QVideoFrame::PixelFormat);
 
     int m_selectedCamera;
     AndroidCamera *m_camera;
@@ -147,6 +159,9 @@ private:
     int m_savedState;
     QCamera::Status m_status;
     bool m_previewStarted;
+
+    QCameraViewfinderSettings m_viewfinderSettings;
+    bool m_viewfinderSettingsDirty;
 
     QImageEncoderSettings m_imageSettings;
     bool m_imageSettingsDirty;
