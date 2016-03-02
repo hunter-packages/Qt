@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 Ruslan Baratov
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Toolkit.
@@ -68,10 +69,17 @@ public:
     void setCaptureMode(QCamera::CaptureModes mode);
     bool isCaptureModeSupported(QCamera::CaptureModes mode) const;
 
-    void setVideoPreview(QObject *videoOutput);
-    void adjustViewfinderSize(const QSize &captureSize, bool restartPreview = true);
+    QCameraViewfinderSettings viewfinderSettings() const { return m_actualViewfinderSettings; }
+    void setViewfinderSettings(const QCameraViewfinderSettings &settings);
+    void applyViewfinderSettings(const QSize &captureSize = QSize(), bool restartPreview = true);
 
-    QImageEncoderSettings imageSettings() const { return m_imageSettings; }
+    void setVideoPreview(QObject *videoOutput);
+
+    QList<QSize> getSupportedPreviewSizes() const;
+    QList<QVideoFrame::PixelFormat> getSupportedPixelFormats() const;
+    QList<AndroidCamera::FpsRange> getSupportedPreviewFpsRange() const;
+
+    QImageEncoderSettings imageSettings() const { return m_actualImageSettings; }
     void setImageSettings(const QImageEncoderSettings &settings);
 
     bool isCaptureDestinationSupported(QCameraImageCapture::CaptureDestinations destination) const;
@@ -137,6 +145,9 @@ private:
                               QCameraImageCapture::CaptureDestinations dest,
                               const QString &fileName);
 
+    static QVideoFrame::PixelFormat QtPixelFormatFromAndroidImageFormat(AndroidCamera::ImageFormat);
+    static AndroidCamera::ImageFormat AndroidImageFormatFromQtPixelFormat(QVideoFrame::PixelFormat);
+
     int m_selectedCamera;
     AndroidCamera *m_camera;
     int m_nativeOrientation;
@@ -148,8 +159,11 @@ private:
     QCamera::Status m_status;
     bool m_previewStarted;
 
-    QImageEncoderSettings m_imageSettings;
-    bool m_imageSettingsDirty;
+    QCameraViewfinderSettings m_requestedViewfinderSettings;
+    QCameraViewfinderSettings m_actualViewfinderSettings;
+
+    QImageEncoderSettings m_requestedImageSettings;
+    QImageEncoderSettings m_actualImageSettings;
     QCameraImageCapture::CaptureDestinations m_captureDestination;
     QCameraImageCapture::DriveMode m_captureImageDriveMode;
     int m_lastImageCaptureId;
