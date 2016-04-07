@@ -1,5 +1,5 @@
 SOURCES = xcb.cpp
 CONFIG -= qt
 
-LIBS += -lxcb
+LIBS += -lxcb -lXau
 
