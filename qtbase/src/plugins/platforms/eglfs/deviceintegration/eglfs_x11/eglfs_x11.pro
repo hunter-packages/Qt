@@ -12,7 +12,7 @@ DEFINES += MESA_EGL_NO_X11_HEADERS
 INCLUDEPATH += $$PWD/../..
 
 CONFIG += egl
-LIBS += -lX11 -lX11-xcb -lxcb
+LIBS += -lX11 -lX11-xcb -lxcb -lXau
 QMAKE_LFLAGS += $$QMAKE_LFLAGS_NOUNDEF
 
 SOURCES += $$PWD/qeglfsx11main.cpp \
