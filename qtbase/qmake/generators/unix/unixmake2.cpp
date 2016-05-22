@@ -1455,9 +1455,35 @@ UnixMakefileGenerator::writeLibtoolFile()
         libs = project->values("QMAKE_INTERNAL_PRL_LIBS");
     else
         libs << "QMAKE_LIBS"; //obvious one
-    t << "dependency_libs='";
+
+    ProStringList dependencyLibs;
     for (ProStringList::ConstIterator it = libs.begin(); it != libs.end(); ++it)
-        t << fixLibFlags((*it).toKey()).join(' ') << ' ';
+        dependencyLibs.append(fixLibFlags((*it).toKey()));
+
+#ifdef Q_OS_DARWIN
+    ProStringList inheritedLibs;
+    for (ProStringList::Iterator it = dependencyLibs.begin();
+        it != dependencyLibs.end(); /* increment iterator in body */) {
+        QString libFlag = (*it).toQString();
+        if (libFlag == "-framework") {
+            inheritedLibs.append(*it);
+            it = dependencyLibs.erase(it);
+            // check that we are at the end of vector? or are we guaranteed not to be?
+            inheritedLibs.append(*it);
+            it = dependencyLibs.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    t << "inherited_linker_flags='";
+    t << inheritedLibs.join(' ') << ' ';
+    t << "'\n\n";
+#endif
+
+    t << "dependency_libs='";
+    t << dependencyLibs.join(' ') << ' ';
     t << "'\n\n";
 
     t << "# Version information for " << lname << "\n";
